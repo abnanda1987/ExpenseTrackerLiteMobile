@@ -8,11 +8,14 @@ const MONTHS = [
 ]
 
 // These categories get a projected month-end forecast instead of a plain
-// over/under check, since they're recurring monthly commitments.
-const FORECAST_CATEGORIES = ['personal', 'vehicle', 'home']
+// over/under check, since they're recurring monthly commitments. Matched
+// by substring (case-insensitive) so names like "Vehicle+Travel" or
+// "Truly Personal" still count.
+const FORECAST_KEYWORDS = ['personal', 'vehicle', 'home']
 
 function isForecastCategory(category: string): boolean {
-  return FORECAST_CATEGORIES.includes(category.trim().toLowerCase())
+  const normalized = category.trim().toLowerCase()
+  return FORECAST_KEYWORDS.some((kw) => normalized.includes(kw))
 }
 
 type BarStatus = 'green' | 'amber' | 'red'

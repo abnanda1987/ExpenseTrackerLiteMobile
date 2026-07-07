@@ -9,10 +9,12 @@ const MONTH_NAMES = [
 ]
 
 // Same set as the Dashboard's forecast categories - recurring monthly commitments.
-const FORECAST_CATEGORIES = ['personal', 'vehicle', 'home']
+// Matched by substring so "Vehicle+Travel" / "Truly Personal" still count.
+const FORECAST_KEYWORDS = ['personal', 'vehicle', 'home']
 
 function isForecastCategory(category: string): boolean {
-  return FORECAST_CATEGORIES.includes(category.trim().toLowerCase())
+  const normalized = category.trim().toLowerCase()
+  return FORECAST_KEYWORDS.some((kw) => normalized.includes(kw))
 }
 
 function todayLocal(): string {
