@@ -12,6 +12,7 @@ export interface ExpenseRow {
   amount: number
   date: string // yyyy-MM-dd
   remarks?: string
+  _row?: number // actual row number in the Expense Log sheet, used for edits
   [key: string]: unknown
 }
 

@@ -3,8 +3,15 @@ import { fetchData } from './api'
 import type { SheetData } from './types'
 import Dashboard from './components/Dashboard'
 import AddExpense from './components/AddExpense'
+import SearchEdit from './components/SearchEdit'
 
-type View = 'dashboard' | 'add'
+type View = 'dashboard' | 'add' | 'search'
+
+const TITLES: Record<View, string> = {
+  dashboard: 'Dashboard',
+  add: 'Add Expense',
+  search: 'Search & Edit',
+}
 
 export default function App() {
   const [data, setData] = useState<SheetData | null>(null)
@@ -34,13 +41,17 @@ export default function App() {
       <div className="passbook">
         <div className="passbook-header">
           <p className="brand">ExpTrackerLite</p>
-          <h1>{view === 'dashboard' ? 'Dashboard' : 'Add Expense'}</h1>
+          <h1>{TITLES[view]}</h1>
         </div>
         <div className="passbook-body">
           {error && <div className="status-banner error">{error}</div>}
           {loading && !data && <div className="spinner-line">Loading your ledger…</div>}
           {data && view === 'dashboard' && (
-            <Dashboard data={data} onAddExpense={() => setView('add')} />
+            <Dashboard
+              data={data}
+              onAddExpense={() => setView('add')}
+              onSearchEdit={() => setView('search')}
+            />
           )}
           {data && view === 'add' && (
             <AddExpense
@@ -51,6 +62,9 @@ export default function App() {
                 setView('dashboard')
               }}
             />
+          )}
+          {data && view === 'search' && (
+            <SearchEdit data={data} onBack={() => setView('dashboard')} onRefresh={load} />
           )}
         </div>
       </div>

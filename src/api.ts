@@ -36,16 +36,28 @@ export interface NewExpense {
   date: string // yyyy-MM-dd
 }
 
-export async function addExpense(entry: NewExpense): Promise<void> {
+export interface UpdateExpense extends NewExpense {
+  _row: number
+}
+
+async function postToSheet(payload: Record<string, unknown>): Promise<void> {
   assertConfigured()
   // Content-Type text/plain avoids a CORS preflight (OPTIONS), which
   // Apps Script web apps do not support. The body is still valid JSON.
   const res = await fetch(BASE_URL as string, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(entry),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) throw new Error(`Failed to save expense (${res.status})`)
   const json = await res.json()
   if (!json.ok) throw new Error(json.error || 'Failed to save expense')
+}
+
+export async function addExpense(entry: NewExpense): Promise<void> {
+  await postToSheet({ action: 'add', ...entry })
+}
+
+export async function updateExpense(entry: UpdateExpense): Promise<void> {
+  await postToSheet({ action: 'update', ...entry })
 }

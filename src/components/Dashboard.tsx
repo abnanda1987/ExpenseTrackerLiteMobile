@@ -27,9 +27,11 @@ function money(n: number): string {
 export default function Dashboard({
   data,
   onAddExpense,
+  onSearchEdit,
 }: {
   data: SheetData
   onAddExpense: () => void
+  onSearchEdit: () => void
 }) {
   const years = useMemo(
     () => Array.from(new Set(data.budgets.map((b) => String(b.year)))).sort().reverse(),
@@ -112,9 +114,14 @@ export default function Dashboard({
 
   return (
     <div>
-      <button className="btn btn-add" onClick={onAddExpense} style={{ marginTop: 0, marginBottom: 18 }}>
-        + Add Expense
-      </button>
+      <div className="btn-row" style={{ marginBottom: 18 }}>
+        <button className="btn btn-add" style={{ margin: 0 }} onClick={onAddExpense}>
+          + Add Expense
+        </button>
+        <button className="btn btn-secondary" onClick={onSearchEdit}>
+          Search / Edit
+        </button>
+      </div>
 
       <div className="field-row">
         <div className="field">
