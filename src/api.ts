@@ -33,6 +33,7 @@ export interface NewExpense {
   category: string
   amount: number
   remarks: string
+  date: string // yyyy-MM-dd
 }
 
 export async function addExpense(entry: NewExpense): Promise<void> {
@@ -42,7 +43,7 @@ export async function addExpense(entry: NewExpense): Promise<void> {
   const res = await fetch(BASE_URL as string, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ ...entry, date: new Date().toISOString() }),
+    body: JSON.stringify(entry),
   })
   if (!res.ok) throw new Error(`Failed to save expense (${res.status})`)
   const json = await res.json()

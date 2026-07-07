@@ -2,6 +2,14 @@ import { useMemo, useState } from 'react'
 import type { SheetData } from '../types'
 import { addExpense } from '../api'
 
+function todayLocal(): string {
+  const d = new Date()
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
 export default function AddExpense({
   data,
   onCancel,
@@ -11,6 +19,7 @@ export default function AddExpense({
   onCancel: () => void
   onSaved: () => void
 }) {
+  const today = todayLocal()
   const mains = useMemo(
     () => Array.from(new Set(data.budgets.map((b) => b.main))).filter(Boolean),
     [data.budgets]
@@ -20,6 +29,7 @@ export default function AddExpense({
   const [category, setCategory] = useState('')
   const [amount, setAmount] = useState('')
   const [remarks, setRemarks] = useState('')
+  const [date, setDate] = useState(today)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,7 +46,8 @@ export default function AddExpense({
   const defaultCategory = categories.find((c) => /^personal$/i.test(c)) || categories[0] || ''
   const effectiveCategory = category || defaultCategory
   const amountNum = Number(amount)
-  const canSave = !!main && !!effectiveCategory && amountNum > 0 && !saving
+  const isValidDate = !!date && date <= today
+  const canSave = !!main && !!effectiveCategory && amountNum > 0 && isValidDate && !saving
 
   async function handleSave() {
     if (!canSave) return
@@ -48,6 +59,7 @@ export default function AddExpense({
         category: effectiveCategory,
         amount: amountNum,
         remarks,
+        date,
       })
       onSaved()
     } catch (err: any) {
@@ -92,6 +104,15 @@ export default function AddExpense({
       </div>
 
       <div className="field-row">
+        <div className="field">
+          <label>Date</label>
+          <input
+            type="date"
+            value={date}
+            max={today}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </div>
         <div className="field">
           <label>Amount</label>
           <input
