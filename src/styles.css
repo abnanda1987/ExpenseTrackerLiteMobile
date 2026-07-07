@@ -1,0 +1,349 @@
+/* ---- Design tokens -----------------------------------------------------
+   Concept: a physical bank passbook lying open on a dark desk. The app
+   surface is a "page" of paper; figures are set in a mono ledger face;
+   a perforated stub divides the summary from the itemized entries.
+-------------------------------------------------------------------------- */
+:root {
+  --ink: #12201b;
+  --ink-soft: #1a2c24;
+  --paper: #f5f1e6;
+  --paper-soft: #ece5d2;
+  --line: #d8d2c4;
+  --muted: #6b6558;
+  --ledger-green: #2f5d50;
+  --ledger-green-soft: #dfe9e4;
+  --rust: #c97a3d;
+  --rust-soft: #f3e3d1;
+  --alert: #a83e30;
+  --alert-soft: #f5ddd7;
+
+  --font-display: 'Roboto Slab', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  background-image: radial-gradient(circle at 50% -10%, var(--ink-soft), var(--ink) 60%);
+  font-family: var(--font-body);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px 14px 48px;
+}
+
+.passbook {
+  width: 100%;
+  max-width: 480px;
+  background: var(--paper);
+  border-radius: 6px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45), 0 2px 0 rgba(255, 255, 255, 0.4) inset;
+  overflow: hidden;
+  position: relative;
+}
+
+.passbook::before {
+  /* left binding edge, like a stitched passbook spine */
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--ledger-green) 0px,
+    var(--ledger-green) 6px,
+    transparent 6px,
+    transparent 14px
+  );
+  opacity: 0.5;
+}
+
+.passbook-header {
+  padding: 22px 24px 16px 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.passbook-header .brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ledger-green);
+  margin: 0 0 6px;
+}
+
+.passbook-header h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink);
+}
+
+.passbook-body {
+  padding: 20px 24px 28px 30px;
+}
+
+/* ---- Perforated divider (the signature element) ---- */
+.perforation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 22px 0;
+}
+
+.perforation::before,
+.perforation::after {
+  content: '';
+  flex: 1;
+  border-top: 2px dashed var(--line);
+}
+
+.perforation span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- Selectors row ---- */
+.field-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.field {
+  flex: 1;
+  min-width: 120px;
+}
+
+.field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.field select,
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: var(--font-body);
+}
+
+.field input[type='number'] {
+  font-family: var(--font-mono);
+}
+
+/* ---- Summary stub ---- */
+.stub {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.stub-card {
+  background: var(--paper-soft);
+  border-radius: 4px;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.stub-card .label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.stub-card .value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stub-card.remaining.positive .value {
+  color: var(--ledger-green);
+}
+
+.stub-card.remaining.negative .value {
+  color: var(--alert);
+}
+
+/* ---- Ledger rows / bar chart ---- */
+.ledger-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger-row:last-child {
+  border-bottom: none;
+}
+
+.ledger-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.ledger-row-top .cat {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ledger-row-top .figures {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bar-track {
+  height: 8px;
+  background: var(--paper-soft);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--ledger-green);
+  transition: width 0.4s ease;
+}
+
+.bar-fill.over {
+  background: var(--alert);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--ledger-green);
+  color: var(--paper);
+  width: 100%;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.btn-add {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn-row .btn {
+  flex: 1;
+}
+
+/* ---- Toast / error / loading ---- */
+.status-banner {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+
+.status-banner.error {
+  background: var(--alert-soft);
+  color: var(--alert);
+}
+
+.status-banner.success {
+  background: var(--ledger-green-soft);
+  color: var(--ledger-green);
+}
+
+.spinner-line {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  padding: 30px 0;
+}
+
+@media (max-width: 380px) {
+  .stub {
+    grid-template-columns: 1fr;
+  }
+}
