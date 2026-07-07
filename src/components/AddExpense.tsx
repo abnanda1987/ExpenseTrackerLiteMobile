@@ -1,6 +1,19 @@
 import { useMemo, useState } from 'react'
 import type { SheetData } from '../types'
 import { addExpense } from '../api'
+import { fiscalYearOf } from '../config'
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+// Same set as the Dashboard's forecast categories - recurring monthly commitments.
+const FORECAST_CATEGORIES = ['personal', 'vehicle', 'home']
+
+function isForecastCategory(category: string): boolean {
+  return FORECAST_CATEGORIES.includes(category.trim().toLowerCase())
+}
 
 function todayLocal(): string {
   const d = new Date()
@@ -48,6 +61,35 @@ export default function AddExpense({
   const amountNum = Number(amount)
   const isValidDate = !!date && date <= today
   const canSave = !!main && !!effectiveCategory && amountNum > 0 && isValidDate && !saving
+
+  // Feature: show "XX% of the monthly budget spent" for the recurring
+  // forecast categories, using the selected date's year/month.
+  const budgetNote = useMemo(() => {
+    if (!isForecastCategory(effectiveCategory) || !date) return null
+    const [selYearStr, selMonthStr] = date.split('-')
+    const selYear = Number(selYearStr)
+    const selMonthIndex = Number(selMonthStr) - 1
+    if (isNaN(selYear) || isNaN(selMonthIndex)) return null
+
+    const fy = fiscalYearOf(date)
+    const monthlyBudget = data.budgets
+      .filter((b) => String(b.year) === fy && b.main === main && b.category === effectiveCategory)
+      .reduce((sum, b) => sum + (Number(b.amount) || 0), 0)
+
+    const existingSpent = data.expenses
+      .filter((exp) => {
+        if (exp.main !== main || exp.category !== effectiveCategory) return false
+        const [ey, em] = (exp.date || '').split('-').map(Number)
+        return ey === selYear && em - 1 === selMonthIndex
+      })
+      .reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0)
+
+    const projected = existingSpent + (amountNum > 0 ? amountNum : 0)
+    if (monthlyBudget <= 0) return null
+
+    const pct = Math.round((projected / monthlyBudget) * 100)
+    return { pct, monthLabel: `${MONTH_NAMES[selMonthIndex]} ${selYear}` }
+  }, [data, main, effectiveCategory, date, amountNum])
 
   async function handleSave() {
     if (!canSave) return
@@ -125,6 +167,12 @@ export default function AddExpense({
           />
         </div>
       </div>
+
+      {budgetNote && (
+        <div className={`status-banner ${budgetNote.pct > 100 ? 'error' : 'info'}`}>
+          {budgetNote.pct}% of {effectiveCategory}'s monthly budget spent for {budgetNote.monthLabel}.
+        </div>
+      )}
 
       <div className="field-row">
         <div className="field">

@@ -262,6 +262,10 @@ button {
   background: var(--alert);
 }
 
+.bar-fill.amber {
+  background: var(--rust);
+}
+
 .empty-state {
   text-align: center;
   padding: 40px 10px;
@@ -332,6 +336,11 @@ button {
 .status-banner.success {
   background: var(--ledger-green-soft);
   color: var(--ledger-green);
+}
+
+.status-banner.info {
+  background: var(--paper-soft);
+  color: var(--muted);
 }
 
 .spinner-line {

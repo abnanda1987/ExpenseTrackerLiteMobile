@@ -7,6 +7,16 @@ const MONTHS = [
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ]
 
+// These categories get a projected month-end forecast instead of a plain
+// over/under check, since they're recurring monthly commitments.
+const FORECAST_CATEGORIES = ['personal', 'vehicle', 'home']
+
+function isForecastCategory(category: string): boolean {
+  return FORECAST_CATEGORIES.includes(category.trim().toLowerCase())
+}
+
+type BarStatus = 'green' | 'amber' | 'red'
+
 function money(n: number): string {
   return n.toLocaleString(undefined, { maximumFractionDigits: 0 })
 }
@@ -38,6 +48,19 @@ export default function Dashboard({
   const [month, setMonth] = useState<string>(currentMonth) // '0'-'11', or 'all'; only used when main looks like "Recurring"
 
   const isRecurring = /recurring/i.test(main)
+  const isViewingCurrentMonth = isRecurring && month !== 'all' && year === currentYear && month === currentMonth
+  const todayDayOfMonth = new Date().getDate()
+  const daysInSelectedMonth =
+    month !== 'all' && !isNaN(Number(year)) ? new Date(Number(year), Number(month) + 1, 0).getDate() : 30
+
+  function statusFor(row: CategoryTotal): BarStatus {
+    if (row.spent > row.budget) return 'red' // already over budget, regardless of category
+    if (!isForecastCategory(row.category)) return 'green'
+    if (!isViewingCurrentMonth) return 'green' // can't meaningfully forecast a past/future or "All" view
+    const projected =
+      todayDayOfMonth > 0 ? (row.spent / todayDayOfMonth) * daysInSelectedMonth : row.spent
+    return projected > row.budget ? 'amber' : 'green'
+  }
 
   const rows: CategoryTotal[] = useMemo(() => {
     const budgetsForSelection = data.budgets.filter(
@@ -155,7 +178,7 @@ export default function Dashboard({
 
       {rows.map((row) => {
         const pct = row.budget > 0 ? Math.min(100, (row.spent / row.budget) * 100) : row.spent > 0 ? 100 : 0
-        const over = row.spent > row.budget
+        const status = statusFor(row)
         return (
           <div className="ledger-row" key={row.category}>
             <div className="ledger-row-top">
@@ -166,7 +189,7 @@ export default function Dashboard({
             </div>
             <div className="bar-track">
               <div
-                className={`bar-fill ${over ? 'over' : ''}`}
+                className={`bar-fill ${status === 'red' ? 'over' : status === 'amber' ? 'amber' : ''}`}
                 style={{ width: `${pct}%` }}
               />
             </div>
