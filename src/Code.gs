@@ -5,6 +5,7 @@
  *   GET  ?action=data                            -> { budgets: [...], expenses: [...] }
  *   POST { action: 'add',    main, category, amount, date, remarks }
  *   POST { action: 'update', _row, main, category, amount, date, remarks }
+ *   POST { action: 'delete', _row }
  *
  * Reads column headers dynamically from row 1 of each sheet, so your exact
  * column order/names don't need to match this file. Matching is
@@ -37,6 +38,8 @@ function doPost(e) {
     var body = JSON.parse(e.postData.contents);
     if (body.action === 'update') {
       updateExpense_(body);
+    } else if (body.action === 'delete') {
+      deleteExpense_(body);
     } else {
       appendExpense_(body);
     }
@@ -132,6 +135,18 @@ function updateExpense_(entry) {
   var cols = ensureExpenseColumns_(sheet);
   var row = buildExpenseRow_(cols, entry);
   sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
+}
+
+function deleteExpense_(entry) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EXPENSE_SHEET);
+  if (!sheet) throw new Error('Sheet "' + EXPENSE_SHEET + '" not found');
+
+  var rowNum = Number(entry._row);
+  if (!rowNum || rowNum < 2 || rowNum > sheet.getLastRow()) {
+    throw new Error('Invalid row reference for delete: ' + entry._row);
+  }
+
+  sheet.deleteRow(rowNum);
 }
 
 function readSheetAsObjects_(sheetName, includeRowNumber) {

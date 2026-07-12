@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { SheetData, ExpenseRow } from '../types'
-import { updateExpense } from '../api'
+import { updateExpense, deleteExpense } from '../api'
 import ExpenseForm from './ExpenseForm'
 
 const PAGE_SIZE = 10
@@ -28,6 +28,8 @@ export default function SearchEdit({
   const [dateTo, setDateTo] = useState('')
   const [page, setPage] = useState(0)
   const [editingRow, setEditingRow] = useState<ExpenseRow | null>(null)
+  const [deletingRow, setDeletingRow] = useState<number | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     return data.expenses
@@ -47,6 +49,25 @@ export default function SearchEdit({
   function updateFilter(fn: () => void) {
     fn()
     setPage(0)
+  }
+
+  async function handleDelete(exp: ExpenseRow) {
+    if (exp._row === undefined) return
+    const confirmed = window.confirm(
+      `Delete this expense?\n\n${exp.date} · ${exp.category} · ${money(exp.amount)}\n\nThis removes the row from your Google Sheet and cannot be undone.`
+    )
+    if (!confirmed) return
+
+    setDeletingRow(exp._row)
+    setDeleteError(null)
+    try {
+      await deleteExpense(exp._row)
+      await onRefresh()
+    } catch (err: any) {
+      setDeleteError(err.message || 'Could not delete this expense.')
+    } finally {
+      setDeletingRow(null)
+    }
   }
 
   if (editingRow) {
@@ -119,6 +140,8 @@ export default function SearchEdit({
         <span>{filtered.length} entries</span>
       </div>
 
+      {deleteError && <div className="status-banner error">{deleteError}</div>}
+
       {pageItems.length === 0 && (
         <div className="empty-state">No expenses match this search.</div>
       )}
@@ -141,13 +164,24 @@ export default function SearchEdit({
               {exp.date} · {exp.main}
               {exp.remarks ? ` · ${exp.remarks}` : ''}
             </span>
-            <button
-              className="btn btn-secondary"
-              style={{ padding: '6px 12px', fontSize: 12 }}
-              onClick={() => setEditingRow(exp)}
-            >
-              Edit
-            </button>
+            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '6px 12px', fontSize: 12 }}
+                onClick={() => setEditingRow(exp)}
+                disabled={deletingRow === exp._row}
+              >
+                Edit
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{ padding: '6px 12px', fontSize: 12 }}
+                onClick={() => handleDelete(exp)}
+                disabled={deletingRow === exp._row}
+              >
+                {deletingRow === exp._row ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       ))}

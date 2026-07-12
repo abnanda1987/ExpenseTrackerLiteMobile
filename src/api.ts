@@ -62,3 +62,7 @@ export async function addExpense(entry: NewExpense): Promise<void> {
 export async function updateExpense(entry: UpdateExpense): Promise<void> {
   await postToSheet({ action: 'update', ...entry })
 }
+
+export async function deleteExpense(row: number): Promise<void> {
+  await postToSheet({ action: 'delete', _row: row })
+}

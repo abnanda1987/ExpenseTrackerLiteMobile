@@ -312,6 +312,17 @@ button {
   border: 1px solid var(--line);
 }
 
+.btn-danger {
+  background: var(--alert-soft);
+  color: var(--alert);
+  border: 1px solid var(--alert-soft);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-add {
   display: block;
   width: 100%;
