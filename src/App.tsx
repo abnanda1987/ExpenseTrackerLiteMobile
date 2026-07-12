@@ -40,8 +40,17 @@ export default function App() {
     <div className="app-shell">
       <div className="passbook">
         <div className="passbook-header">
-          <p className="brand">ExpTrackerLite</p>
-          <h1>{TITLES[view]}</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p className="brand">ExpTrackerLite</p>
+              <h1>{TITLES[view]}</h1>
+            </div>
+            {view !== 'dashboard' && (
+              <button className="btn btn-home" onClick={() => setView('dashboard')} title="Back to Dashboard">
+                🏠 Home
+              </button>
+            )}
+          </div>
         </div>
         <div className="passbook-body">
           {error && <div className="status-banner error">{error}</div>}

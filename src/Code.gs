@@ -83,11 +83,29 @@ function ensureExpenseColumns_(sheet) {
   };
 }
 
+// Only digits, whitespace, and + - * / ( ) . are ever allowed through to
+// become a live spreadsheet formula. Anything else silently falls back to
+// the plain computed number - this is a server-side safety net, since the
+// frontend already restricts input to the same characters.
+var SAFE_FORMULA_PATTERN = /^[0-9+\-*/(). \t]+$/;
+
 function buildExpenseRow_(cols, entry) {
   var row = new Array(cols.headers.length).fill('');
   if (cols.mainIdx > -1) row[cols.mainIdx] = entry.main || '';
   if (cols.categoryIdx > -1) row[cols.categoryIdx] = entry.category || '';
-  if (cols.amountIdx > -1) row[cols.amountIdx] = Number(entry.amount) || 0;
+
+  if (cols.amountIdx > -1) {
+    var expr = entry.amountExpr ? String(entry.amountExpr).trim() : '';
+    var isPlainNumber = /^-?[0-9]+(\.[0-9]+)?$/.test(expr);
+    if (expr && !isPlainNumber && SAFE_FORMULA_PATTERN.test(expr)) {
+      // A string starting with "=" is entered as a live formula by
+      // setValues(), exactly as if typed into the cell by hand.
+      row[cols.amountIdx] = '=' + expr;
+    } else {
+      row[cols.amountIdx] = Number(entry.amount) || 0;
+    }
+  }
+
   row[cols.remarksIdx] = entry.remarks || '';
   row[cols.dateIdx] = entry.date ? new Date(entry.date) : new Date();
   return row;

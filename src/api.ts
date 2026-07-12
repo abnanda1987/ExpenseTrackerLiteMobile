@@ -32,6 +32,7 @@ export interface NewExpense {
   main: string
   category: string
   amount: number
+  amountExpr: string
   remarks: string
   date: string // yyyy-MM-dd
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { SheetData } from '../types'
 import { fiscalYearOf } from '../config'
+import { evaluateExpression } from '../formula'
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -28,6 +29,7 @@ export interface ExpenseFormValues {
   main: string
   category: string
   amount: number
+  amountExpr: string
   remarks: string
   date: string
 }
@@ -65,7 +67,7 @@ export default function ExpenseForm({
 
   const [main, setMain] = useState(initialMain || mains[0] || '')
   const [category, setCategory] = useState(initialCategory || '')
-  const [amount, setAmount] = useState(
+  const [amountInput, setAmountInput] = useState(
     initialAmount !== undefined && initialAmount !== null ? String(initialAmount) : ''
   )
   const [remarks, setRemarks] = useState(initialRemarks || '')
@@ -81,11 +83,24 @@ export default function ExpenseForm({
     return list
   }, [data.budgets, main])
 
-  const defaultCategory = categories.find((c) => /^personal$/i.test(c)) || categories[0] || ''
+  const isRecurringMain = /recurring/i.test(main)
+  // "Truly Personal" is the most common category, so default to it under Recurring.
+  const defaultCategory = isRecurringMain
+    ? categories.find((c) => /personal/i.test(c)) || categories[0] || ''
+    : categories[0] || ''
   const effectiveCategory = category || defaultCategory
-  const amountNum = Number(amount)
+
+  const evalResult = useMemo(() => evaluateExpression(amountInput), [amountInput])
+  const amountNum = evalResult.value ?? 0
+  const amountErrorMessage = evalResult.error
+    ? evalResult.error
+    : evalResult.value !== null && evalResult.value <= 0
+      ? 'Amount must be greater than 0'
+      : null
+
   const isValidDate = !!date && date <= today
-  const canSave = !!main && !!effectiveCategory && amountNum > 0 && isValidDate && !saving
+  const canSave =
+    !!main && !!effectiveCategory && evalResult.value !== null && evalResult.value > 0 && isValidDate && !saving
 
   // Feature: show "XX% of the monthly budget spent" for the recurring
   // forecast categories, using the selected date's year/month.
@@ -126,6 +141,7 @@ export default function ExpenseForm({
         main,
         category: effectiveCategory,
         amount: amountNum,
+        amountExpr: amountInput.trim(),
         remarks,
         date,
       })
@@ -179,13 +195,17 @@ export default function ExpenseForm({
         <div className="field">
           <label>Amount</label>
           <input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            type="text"
+            inputMode="decimal"
+            placeholder="e.g. 100+45-56"
+            value={amountInput}
+            onChange={(e) => setAmountInput(e.target.value)}
           />
+          {amountInput.trim() !== '' && (
+            <div className={`amount-preview ${amountErrorMessage ? 'error' : ''}`}>
+              {amountErrorMessage ? amountErrorMessage : `= ${amountNum}`}
+            </div>
+          )}
         </div>
       </div>
 

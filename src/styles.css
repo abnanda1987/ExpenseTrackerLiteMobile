@@ -176,6 +176,17 @@ button {
   font-family: var(--font-mono);
 }
 
+.amount-preview {
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ledger-green);
+}
+
+.amount-preview.error {
+  color: var(--alert);
+}
+
 /* ---- Summary stub ---- */
 .stub {
   display: grid;
@@ -307,6 +318,16 @@ button {
   margin-top: 20px;
   background: var(--ink);
   color: var(--paper);
+}
+
+.btn-home {
+  background: var(--paper-soft);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  padding: 8px 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-row {
